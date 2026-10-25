@@ -1,0 +1,12 @@
+# Logs
+backend-log.txt
+backend-err.txt
+frontend-log.txt
+frontend-err.txt
+
+# Installers
+*.msi
+
+# OS
+.DS_Store
+Thumbs.db

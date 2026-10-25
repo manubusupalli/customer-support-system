@@ -1,0 +1,12 @@
+{
+  "inputs": [],
+  "servers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ctx7sk-de4d3e6d-196b-491a-8373-0ed20e20179c"
+      }
+    }
+  }
+}
