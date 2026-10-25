@@ -62,9 +62,50 @@ npm run dev
 | DB user | postgres |
 | DB password | admin |
 
-## Running Tests
+## Testing
+
+### Backend Tests (9 tests total)
+
+Requires PostgreSQL running on `localhost:5432` for integration tests.
 
 ```
 cd backend
-./mvnw.cmd test
+./mvnw.cmd test          # Windows
+./mvnw test              # Mac/Linux
 ```
+
+**Unit tests** (web layer only, no DB):
+- [HealthControllerTest.java](backend/src/test/java/com/customersupport/backend/HealthControllerTest.java) — `GET /api/health` returns 200. Uses `@Import(SecurityConfig.class)` — required so `permitAll()` applies instead of default Basic Auth.
+- [AuthControllerTest.java](backend/src/test/java/com/customersupport/backend/AuthControllerTest.java) — `/api/auth/me` unauthenticated → 401; with `@WithMockUser` → 200.
+
+**Integration tests** (full Spring context + real PostgreSQL):
+- [AuthIntegrationTest.java](backend/src/test/java/com/customersupport/backend/AuthIntegrationTest.java) — login/logout/session flow. `@Transactional` rolls back any DB state after each test.
+
+**Spring Boot 4 import note**: `@WebMvcTest` and `@AutoConfigureMockMvc` moved to `org.springframework.boot.webmvc.test.autoconfigure.*` (was `org.springframework.boot.test.autoconfigure.web.servlet.*` in Boot 3).
+
+### Frontend Component Tests (9 tests total)
+
+No backend required — `fetch` is mocked with `vi.spyOn(globalThis, 'fetch')`.
+
+```
+cd frontend
+npm test
+```
+
+Test files in [frontend/src/test/](frontend/src/test/):
+- [Login.test.jsx](frontend/src/test/Login.test.jsx) — renders form, 401 error, network error, success calls `onLogin`
+- [Dashboard.test.jsx](frontend/src/test/Dashboard.test.jsx) — renders username, nav buttons, active state, sign out calls `onLogout`
+
+Vitest picks up only `src/test/**/*.test.{js,jsx}` (configured in `vite.config.js`) — the `e2e/` folder is excluded.
+
+### E2E Tests (4 tests total)
+
+Both backend (port 8081) and frontend (port 3000) must be running.
+
+```
+cd frontend
+npx playwright install chromium   # first time only
+npm run test:e2e
+```
+
+Test file: [frontend/e2e/auth.spec.js](frontend/e2e/auth.spec.js) — login page shown unauthenticated, valid login → dashboard, sign out → login, invalid credentials → error.

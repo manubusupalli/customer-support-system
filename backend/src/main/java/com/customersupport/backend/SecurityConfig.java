@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 
 @Configuration
@@ -26,6 +27,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            // CSRF disabled — SameSite=Strict session cookie (application.properties) is the compensating control
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/health", "/api/auth/login").permitAll()
@@ -36,16 +38,12 @@ public class SecurityConfig {
                 .successHandler((req, res, authentication) -> {
                     res.setStatus(200);
                     res.setContentType("application/json");
-                    PrintWriter writer = res.getWriter();
-                    writer.write("{\"username\":\"" + authentication.getName() + "\"}");
-                    writer.flush();
+                    writeJson(res.getWriter(), "username", authentication.getName());
                 })
                 .failureHandler((req, res, ex) -> {
                     res.setStatus(401);
                     res.setContentType("application/json");
-                    PrintWriter writer = res.getWriter();
-                    writer.write("{\"error\":\"Invalid credentials\"}");
-                    writer.flush();
+                    writeJson(res.getWriter(), "error", "Invalid credentials");
                 })
                 .permitAll()
             )
@@ -54,9 +52,7 @@ public class SecurityConfig {
                 .logoutSuccessHandler((req, res, authentication) -> {
                     res.setStatus(200);
                     res.setContentType("application/json");
-                    PrintWriter writer = res.getWriter();
-                    writer.write("{\"status\":\"logged out\"}");
-                    writer.flush();
+                    writeJson(res.getWriter(), "status", "logged out");
                 })
                 .permitAll()
             )
@@ -64,12 +60,16 @@ public class SecurityConfig {
                 .authenticationEntryPoint((req, res, authEx) -> {
                     res.setStatus(401);
                     res.setContentType("application/json");
-                    PrintWriter writer = res.getWriter();
-                    writer.write("{\"error\":\"Unauthorized\"}");
-                    writer.flush();
+                    writeJson(res.getWriter(), "error", "Unauthorized");
                 })
             );
         return http.build();
+    }
+
+    private static void writeJson(PrintWriter writer, String key, String value) throws IOException {
+        String safe = value.replace("\\", "\\\\").replace("\"", "\\\"");
+        writer.write("{\"" + key + "\":\"" + safe + "\"}");
+        writer.flush();
     }
 
     @Bean

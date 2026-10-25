@@ -1,3 +1,10 @@
+# Local secrets (never commit)
+backend/src/main/resources/application-local.properties
+
+# Playwright test artifacts
+frontend/test-results/
+frontend/playwright-report/
+
 # Logs
 backend-log.txt
 backend-err.txt
