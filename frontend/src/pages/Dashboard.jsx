@@ -1,7 +1,20 @@
 import { useState } from 'react'
+import Tickets from './Tickets'
+import TicketDetail from './TicketDetail'
 
 export default function Dashboard({ username, onLogout }) {
   const [activePage, setActivePage] = useState('home')
+  const [selectedTicketId, setSelectedTicketId] = useState(null)
+
+  function openTicket(id) {
+    setSelectedTicketId(id)
+    setActivePage('ticket-detail')
+  }
+
+  function backToTickets() {
+    setSelectedTicketId(null)
+    setActivePage('tickets')
+  }
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -50,10 +63,18 @@ export default function Dashboard({ username, onLogout }) {
       </nav>
 
       {/* Page content */}
-      <main className="flex-1 flex items-center justify-center">
-        <p className="text-gray-400 text-sm">
-          {activePage === 'home' ? 'Home page coming soon' : 'Tickets page coming soon'}
-        </p>
+      <main className="flex-1 flex flex-col">
+        {activePage === 'home' && (
+          <div className="flex-1 flex items-center justify-center">
+            <p className="text-gray-400 text-sm">Home page coming soon</p>
+          </div>
+        )}
+        {activePage === 'tickets' && (
+          <Tickets onSelectTicket={openTicket} />
+        )}
+        {activePage === 'ticket-detail' && selectedTicketId && (
+          <TicketDetail ticketId={selectedTicketId} onBack={backToTickets} />
+        )}
       </main>
     </div>
   )
